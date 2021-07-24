@@ -10,6 +10,7 @@ public interface OneTimeDialogInterface {
     /**
      * This shows a alert dialog
      * @return <code>true</code> if the dialog has to be shown once more, <code>false</code> otherwise
+     * @param builder
      */
     boolean OneTimeDialog(AlertDialog.Builder builder);
 }

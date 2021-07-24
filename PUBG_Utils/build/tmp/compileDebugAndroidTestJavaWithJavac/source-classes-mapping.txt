@@ -1,0 +1,4 @@
+com/pubg/utils/ExampleInstrumentedTest.java
+ com.pubg.utils.ExampleInstrumentedTest
+com/pubg/utils/test/BuildConfig.java
+ com.pubg.utils.test.BuildConfig

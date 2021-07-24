@@ -1,31 +1,23 @@
 package com.pubg.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.MediaCodec;
 import android.os.Environment;
 
+import androidx.annotation.NonNull;
+
+import com.pubg.utils.FileUtils;
+import com.pubg.utils.OneTimeDialogInterface;
+import com.pubg.utils.OneTimeEventInterface;
+
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.AlgorithmParameters;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Random;
 import java.util.Scanner;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.EncryptedPrivateKeyInfo;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -33,67 +25,36 @@ import javax.crypto.spec.SecretKeySpec;
  * This class contains method to manage PUBGM External files which is provided by method {@link Activity#getExternalFilesDir}.
  * @author Rahil khan
  * @version 1.0
+ * @since 2021
  */
 public class PubgUtils {
 
-    private final Activity activity;
-    private final FileUtils utils;
     private final String VERSION;
-    public static final String GLOBAL = "com.tencent.ig";
-    public static final String KOREAN = "com.pubg.krmobile";
-    public static final String TAIWAN = "com.rekoo.pubgm";
-    public static final String VIETNAM = "com.vng.pubgmobile";
-    public static final String LITE = "com.tencent.iglite";
+    private static final String GLOBAL = "com.tencent.ig";
+    private static final String KOREAN = "com.pubg.krmobile";
+    private static final String TAIWAN = "com.rekoo.pubgm";
+    private static final String VIETNAM = "com.vng.pubgmobile";
+    private static final String LITE = "com.tencent.iglite";
+    private static final String BGMI = "com.pubg.imobile";
     private final String data;
     private final String saved;
-    private final SharedPreferences preferences;
-    private final SharedPreferences.Editor editor;
 
 
-
-    public PubgUtils(Activity activity, String Version) {
+    @SuppressLint("CommitPrefEdits")
+    public PubgUtils(@NonNull String Version) {
         this.VERSION = Version;
-        this.activity = activity;
-        utils = new FileUtils(activity);
         data = Environment.getExternalStorageDirectory().getPath() + "/Android/data/" + VERSION + "/";
         saved = Environment.getExternalStorageDirectory().getPath() + "/Android/data/" + VERSION + "/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/";
-        preferences = activity.getSharedPreferences("pref_" + System.currentTimeMillis(), Context.MODE_PRIVATE);
-        editor = preferences.edit();
     }
 
 
-    /**
-     * Call this method to do something for onetime or more.
-     * @param eventInterface The code to execute
-     */
-    public void oneTimeEvent(OneTimeEventInterface eventInterface) {
-        boolean doAgain = preferences.getBoolean("isEventDone", false);
-        if (!doAgain) {
-            editor.putBoolean("isEventDone",eventInterface.OneTimeEvent());
-        }
-        editor.apply();
-    }
-
-
-    /**
-     * Call this method to show dialog for onetime or more
-     * @param dialogInterface The dialog code that is to be shown
-     */
-    public void oneTimeDialog(OneTimeDialogInterface dialogInterface) {
-        boolean showAgain = preferences.getBoolean("isDialogShown", false);
-        if (!showAgain) {
-            boolean bool = dialogInterface.OneTimeDialog(new AlertDialog.Builder(activity));
-            editor.putBoolean("isDialogShown", bool);
-        }
-        editor.apply();
-    }
 
     /**
      * Only clears Logs of game
      */
     public void clearLogs() {
-        utils.delete(saved + "Logs");
-        utils.delete(saved + "LightData");
+        FileUtils.delete(saved + "Logs");
+        FileUtils.delete(saved + "LightData");
     }
 
 
@@ -101,15 +62,15 @@ public class PubgUtils {
      * Clears all the cached data of the game. This do not clear logs.
      */
     public void clearCaches() {
-        utils.delete(data + "cache");
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/TGPA", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/ProgramBinaryCache", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/CacheFile.txt", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/vmpcloudconfig.json", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/PufferTmpDir", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/StatEventReportedFlag", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/UpdateInfo", VERSION));
-        utils.delete(Environment.getExternalStorageDirectory() + "/tencent");
+        FileUtils.delete(data + "cache");
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/TGPA", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/ProgramBinaryCache", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/CacheFile.txt", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/vmpcloudconfig.json", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/PufferTmpDir", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/StatEventReportedFlag", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + String.format("/Android/data/%s/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/UpdateInfo", VERSION));
+        FileUtils.delete(Environment.getExternalStorageDirectory() + "/tencent");
     }
 
 
@@ -117,23 +78,23 @@ public class PubgUtils {
      * Deletes all the external data of the game including resource & maps.
      */
     public void clearData() {
-        utils.delete(data + "files");
+        FileUtils.delete(data + "files");
     }
 
     /**
      * Copies .pak file to the Paks folder of the game.
-     * @param pakpath The file to be copied
+     * @param pakpath The file path of the pak file.
      */
     public void copyPak(String pakpath) {
-        utils.copy(pakpath, saved + "Paks");
+        FileUtils.copy(pakpath, saved + "Paks");
     }
 
     /**
      * Copies .sav file to the Paks folder of the game.
-     * @param savpath The file to be copied
+     * @param savpath The file path of the sav file.
      */
     public void copySav(String savpath) {
-        utils.copy(savpath, saved + "SaveGames");
+        FileUtils.copy(savpath, saved + "SaveGames");
     }
 
     /**
@@ -141,7 +102,7 @@ public class PubgUtils {
      * @param pakname The .pak file to be deleted.
      */
     public void deletePak(String pakname) {
-        utils.delete(saved + "Paks/" + pakname);
+        FileUtils.delete(saved + "Paks/" + pakname);
     }
 
     /**
@@ -149,7 +110,7 @@ public class PubgUtils {
      * @param savname The .pak file to be deleted.
      */
     public void deleteSav(String savname) {
-        utils.delete(saved + "SaveGames/" + savname);
+        FileUtils.delete(saved + "SaveGames/" + savname);
     }
 
 
@@ -189,13 +150,13 @@ public class PubgUtils {
 
     /**
      * Blocks the IP address on which the client listen at lobby. This reduces server side ban in lobby
-     * {@link PubgUtils#deactivateFirewall()} must be called after entering or exiting the match or game.
+     * {@link PubgUtils#deactivateFirewall(Context)} ()} must be called after entering or exiting the match or game.
      * @return <code>true</code> only & only if version is korean & ports are blocked successfully, <code>false</code> otherwise
      */
-    public boolean activateFirewall() {
+    public boolean activateFirewall(Context context) {
         if (VERSION.equals(KOREAN)) {
             try {
-                Scanner scanner = new Scanner(activity.getAssets().open("on.sh"));
+                Scanner scanner = new Scanner(context.getAssets().open("on.sh"));
                 while (scanner.hasNextLine())
                     runShell(scanner.nextLine());
                 return true;
@@ -209,12 +170,12 @@ public class PubgUtils {
 
 
     /**
-     * Unblocks all the IP address which are blocked by the method {@link PubgUtils#activateFirewall()}.
+     * Unblocks all the IP address which are blocked by the method {@link PubgUtils#activateFirewall(Context)}.
      * @return <code>true</code> only & only if version is korean & ports are blocked successfully, <code>false</code> otherwise
      */
-    public boolean deactivateFirewall() {
+    public boolean deactivateFirewall(Context context) {
         try {
-            Scanner scanner = new Scanner(activity.getAssets().open("off.sh"));
+            Scanner scanner = new Scanner(context.getAssets().open("off.sh"));
             while (scanner.hasNextLine())
                 runShell(scanner.nextLine());
             return true;
@@ -227,45 +188,85 @@ public class PubgUtils {
 
     /**
      * Starts the game
-     * @return
+     * @return <code>true</code> if {@link PubgUtils#VERSION} is installed, <code>false</code> otherwise
      */
-    public boolean startPUBG() {
-        Intent intent = activity.getPackageManager().getLaunchIntentForPackage(VERSION);
+    public boolean startPUBG(Context context) {
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(VERSION);
         if (intent == null)
             return false;
         else
-            activity.startActivity(intent);
+            context.startActivity(intent);
         return true;
     }
 
-
     /**
-     * This encrypts the provided string using the AES -128bit algorithm & by rahil's encryption key.
-     * @param string The string to be encrypted
-     * @return Encrypted string
-     * @throws Exception if the string is not in correct encoding. Many other reasons can be there.
+     * This class contain some extra method that may be useful while creating app. The methods are off-topics & doesn't belongs to {@link PubgUtils} class.
      */
-    public String encrypt(String string) throws Exception {
-        SecretKeySpec key = new SecretKeySpec("thisisrahilenc16".getBytes(),"AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE,key);
-        byte[] enc = cipher.doFinal(string.getBytes());
-        return new String(enc);
+    public static class Extra {
+        /**
+         * Call this method to do something for one or more time. In {@link OneTimeEventInterface} method,
+         * you have to return <code>true</code> if you want event to occur for one more time.
+         * <code>false</code> otherwise. Event is the code that has to be executed.
+         * @param eventInterface The interface that include the event.
+         * @param id The unique id for this event.
+         */
+        public static void oneTimeEvent(Context context,int id,OneTimeEventInterface eventInterface) {
+            SharedPreferences preferences = context.getSharedPreferences("otp", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            boolean doAgain = preferences.getBoolean("isEventDone_" + id, true);
+            if (doAgain) {
+                editor.putBoolean("isEventDone_" + id,eventInterface.OneTimeEvent()).apply();
+            }
+        }
+
+
+        /**
+         * Call this method to show alertdialog for one or more time. In {@link OneTimeDialogInterface} method,
+         * you have to return <code>true</code> if you want to show alertdialog for one more time,
+         * <code>false</code> otherwise. You don't need to call {@link AlertDialog.Builder#show()} method.
+         * @param dialogInterface The interface that include alertdialog code.
+         * @param id The unique id for this alertdialog.
+         */
+        public static void oneTimeDialog(Context context,int id, OneTimeDialogInterface dialogInterface) {
+            SharedPreferences preferences = context.getSharedPreferences("otp", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            boolean showAgain = preferences.getBoolean("isDialogShown_" + id, true);
+            if (showAgain) {
+                boolean bool = dialogInterface.OneTimeDialog(builder);
+                editor.putBoolean("isDialogShown_" + id, bool).apply();
+                builder.show();
+            }
+        }
+
+
+        /**
+         * This encrypts the provided string using the AES -128bit algorithm & by rahil's encryption key.
+         * @param string The string to be encrypted
+         * @return Encrypted string
+         * @throws Exception if the string is not in correct encoding. Many other reasons can be there.
+         */
+        public static String encrypt(String string) throws Exception {
+            SecretKeySpec key = new SecretKeySpec("thisisrahilenc16".getBytes(),"AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE,key);
+            byte[] enc = cipher.doFinal(string.getBytes());
+            return new String(enc);
+        }
+
+
+        /**
+         * This decrypts the provided string using the AES -128bit algorithm & by rahil's encryption key.
+         * @param string The string to be decrypted
+         * @return decrypted string
+         * @throws Exception if the encrypted string is not in correct encoding. Many other reasons can be there.
+         */
+        public static String decrypt(String string) throws Exception{
+            SecretKeySpec key = new SecretKeySpec("thisisrahilenc16".getBytes(),"AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE,key);
+            byte[] enc = cipher.doFinal(string.getBytes());
+            return new String(enc);
+        }
     }
-
-
-    /**
-     * This decrypts the provided string using the AES -128bit algorithm & by rahil's encryption key.
-     * @param string The string to be decrypted
-     * @return decrypted string
-     * @throws Exception if the encrypted string is not in correct encoding. Many other reasons can be there.
-     */
-    public String decrypt(String string) throws Exception{
-        SecretKeySpec key = new SecretKeySpec("thisisrahilenc16".getBytes(),"AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.DECRYPT_MODE,key);
-        byte[] enc = cipher.doFinal(string.getBytes());
-        return new String(enc);
-    }
-
 }

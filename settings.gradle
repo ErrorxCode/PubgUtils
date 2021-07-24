@@ -1,3 +1,6 @@
 rootProject.name = "Libraries"
 include ':app'
 include ':PUBG_Utils'
+include ':FileScrapper'
+include ':SocialBot'
+include ':EasyWidgets'

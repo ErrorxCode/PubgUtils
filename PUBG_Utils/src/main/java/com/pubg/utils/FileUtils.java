@@ -1,13 +1,15 @@
 package com.pubg.utils;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
+import androidx.annotation.Nullable;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.util.UnzipUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.Scanner;
 
 
@@ -28,26 +31,6 @@ import java.util.Scanner;
  */
 public class FileUtils {
 
-    private final Activity context;
-
-
-    /**
-     * This constructor should only be called if the app has {@link Manifest.permission#WRITE_EXTERNAL_STORAGE}, Otherwise a permission request will be made.
-     * @param activity The context for asking permission.
-     */
-    public FileUtils(Activity activity){
-        this.context = activity;
-        askStoragePermission();
-    }
-
-
-
-    synchronized private void askStoragePermission() {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(context, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        }
-    }
-
 
     /**
      * copy a file from assets folder to filesystem as provided by the path. The file can be in subdirectory.
@@ -55,7 +38,7 @@ public class FileUtils {
      * @param path The path where the asset is to be copied
      * @return True if assets copied successfully, false otherwise
      */
-    public boolean copyFromAssets(String filename, String path) {
+    public static boolean copyAsset(Context context,String filename, String path) {
         File dir = new File(path);
         if (!dir.isDirectory()) {
             if (!dir.mkdir()) {
@@ -78,7 +61,7 @@ public class FileUtils {
 
 
 
-    private void copyFiles(InputStream in, OutputStream out ) throws IOException {
+    private static void copyFiles(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
         while ((read = in.read(buffer)) != -1) {
@@ -95,14 +78,13 @@ public class FileUtils {
         }
     }
 
-
     /**
      * Copy file from one directory to another.
      * @param filepath The file to be copied
      * @param to Path where to copy
      * @return true if file is copied successfully, false otherwise
      */
-    public boolean copy(String filepath, String to) {
+    public static boolean copy(String filepath, String to) {
         if (filepath.endsWith("/")) {
             filepath = filepath.substring(0, filepath.lastIndexOf("/"));
         }
@@ -125,11 +107,12 @@ public class FileUtils {
 
 
     /**
-     * copy all the files from assets folder to the path provided.
+     * copy all the files from assets folder to the path provided. If your assets include directories, then you must zip them & use {@link FileUtils#copyAsset(Context, String, String)}
+     * to copy that zip to filesystem.
      * @param path The path where the assets is to be copied
      * @return true if file is copied successfully, false otherwise
      */
-    public boolean copyAllAssets(String path) {
+    public static boolean copyAllAssets(Context context,String path){
         boolean success = false;
         AssetManager assetManager = context.getAssets();
         String[] files = null;
@@ -138,8 +121,8 @@ public class FileUtils {
         } catch (IOException e) {
             Log.e("tag", "Failed to get asset file list.", e);
         }
-        if (files != null) {
-            for (String filename : files) {
+        if (files != null){
+            for (String filename : files){
                 InputStream in = null;
                 OutputStream out = null;
                 try {
@@ -165,6 +148,29 @@ public class FileUtils {
         return success;
     }
 
+    /**
+     * This will extract the zip to its parent directory with the same name.
+     * @param filepath The path of the zip file
+     * @param password The password of zip if encrypted,null otherwise.
+     * @return <code>true</code> only if extraction succeed, <code>false</code> otherwise; may be because password is incorrect.
+     */
+    public static boolean unZip(String filepath, @Nullable String password){
+        File file = new File(filepath);
+        if (file.isDirectory()){
+            throw new IllegalArgumentException("Path is not a zip file");
+        }
+        ZipFile zipFile = new ZipFile(file);
+        try {
+            if (password != null)
+                zipFile.setPassword(password.toCharArray());
+            zipFile.extractAll(file.getParent());
+            return true;
+        } catch (ZipException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     /**
      * Moves a file from one directory to another.
@@ -172,7 +178,7 @@ public class FileUtils {
      * @param dest Path where the file have to move
      * @return true if file is moved successfully, false otherwise
      */
-    public boolean moveFile(String filepath, String dest) {
+    public static boolean moveFile(String filepath, String dest) {
         File file = new File(filepath);
         return file.renameTo(new File(dest));
     }
@@ -184,14 +190,14 @@ public class FileUtils {
      * @param renameTo Name to rename the file
      * @return true if file is renamed successfully, false otherwise
      */
-    public boolean rename(String filepath, String renameTo) {
+    public static boolean rename(String filepath, String renameTo) {
         if (filepath.endsWith("/")) {
             filepath = filepath.substring(0, filepath.lastIndexOf("/"));
         }
-        String filename = filepath.substring(filepath.lastIndexOf("/"));
         File file = new File(filepath);
         filepath = filepath.substring(0, filepath.lastIndexOf("/"));
         return file.renameTo(new File(filepath + "/" + renameTo));
+
     }
 
 
@@ -200,7 +206,7 @@ public class FileUtils {
      * @param path Path of file or folder to be deleted
      * @return true if deletion is successful, false otherwise
      */
-    public boolean delete(@NonNull String path) {
+    public static boolean delete(@NonNull String path) {
         File file = new File(path);
         if (file.isDirectory()) {
             for (File child : file.listFiles())
@@ -216,7 +222,7 @@ public class FileUtils {
      * @param data The string which have to be written in file
      * @return true if deletion is successful, false otherwise
      */
-    public boolean writeFile(String filepath, String data,boolean append){
+    public static boolean writeFile(String filepath, String data,boolean append){
         try {
             PrintWriter writer = new PrintWriter(new FileWriter(filepath,append));
             writer.println(data);
@@ -235,7 +241,7 @@ public class FileUtils {
      * @param filepath Path of text file
      * @return String as text of the file
      */
-    public String readFile(String filepath){
+    public static String readFile(String filepath){
         StringBuilder builder = new StringBuilder();
         try {
             Scanner scanner = new Scanner(new File(filepath));
@@ -254,7 +260,7 @@ public class FileUtils {
      * @param filepath Path of text file
      * @param words The words to be erased.
      */
-    public void eraseWords(String filepath,String words){
+    public static void eraseWords(String filepath,String words){
         String data = readFile(filepath);
         data = data.replace(words,"");
         writeFile(filepath,data,true);
